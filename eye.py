@@ -2,78 +2,76 @@ import cv2
 import mediapipe as mp
 import pyautogui
 import numpy as np
-from fer import FER  # Free emotion detection library
-from dotenv import load_dotenv
-import os
-
-# Load environment variables (if needed)
-load_dotenv()
 
 # Initialize Mediapipe Face Mesh
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-# Initialize FER for emotion detection
-emotion_detector = FER(mtcnn=True)
-
 # Webcam capture
 cap = cv2.VideoCapture(0)
 
-def detect_emotion(frame):
-    """Detect emotion using FER."""
-    emotion, score = emotion_detector.top_emotion(frame)
-    return emotion if emotion else "Unknown"
-
-def process_landmarks(image, landmarks):
-    """Process face mesh landmarks and calculate mean coordinates."""
-    h, w, _ = image.shape
-    x_coords = []
-    y_coords = []
-    for lm in landmarks:
-        x_coords.append(int(lm.x * w))
-        y_coords.append(int(lm.y * h))
-    return np.mean(x_coords), np.mean(y_coords)
-
+# State flag for left-click
 left_click_flag = False
+
+# Utility function to map coordinates to screen space
+def map_coordinates(x, y, frame_shape, screen_size):
+    frame_height, frame_width, _ = frame_shape
+    screen_width, screen_height = screen_size
+    mapped_x = int((x / frame_width) * screen_width)
+    mapped_y = int((y / frame_height) * screen_height)
+    return mapped_x, mapped_y
 
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
 
+    # Flip the frame for a mirror effect
     frame = cv2.flip(frame, 1)
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = face_mesh.process(rgb_frame)
 
     if results.multi_face_landmarks:
         for face_landmarks in results.multi_face_landmarks:
-            left_eye_x, left_eye_y = process_landmarks(frame, face_landmarks.landmark[33:133])
-            right_eye_x, right_eye_y = process_landmarks(frame, face_landmarks.landmark[362:463])
+            frame_height, frame_width, _ = frame.shape
+
+            # Get key points for left and right eyes
+            left_eye_coords = face_landmarks.landmark[33:133]
+            right_eye_coords = face_landmarks.landmark[362:463]
+
+            # Calculate the center of each eye
+            left_eye_x = int(np.mean([p.x for p in left_eye_coords]) * frame_width)
+            left_eye_y = int(np.mean([p.y for p in left_eye_coords]) * frame_height)
+            right_eye_x = int(np.mean([p.x for p in right_eye_coords]) * frame_width)
+            right_eye_y = int(np.mean([p.y for p in right_eye_coords]) * frame_height)
+
+            # Draw crosshairs over the eyes
+            cv2.circle(frame, (left_eye_x, left_eye_y), 5, (0, 255, 0), -1)
+            cv2.circle(frame, (right_eye_x, right_eye_y), 5, (0, 255, 0), -1)
+
+            # Calculate the average point between the eyes (for mouse movement)
             avg_x = (left_eye_x + right_eye_x) / 2
             avg_y = (left_eye_y + right_eye_y) / 2
 
-            # Mouse movement
+            # Map eye coordinates to screen space
             screen_width, screen_height = pyautogui.size()
-            mouse_x = int(avg_x * screen_width / frame.shape[1])
-            mouse_y = int(avg_y * screen_height / frame.shape[0])
+            mouse_x, mouse_y = map_coordinates(avg_x, avg_y, frame.shape, (screen_width, screen_height))
             pyautogui.moveTo(mouse_x, mouse_y)
 
-            # Blinking Detection (Simplified Logic)
-            blink = face_landmarks.landmark[159].y - face_landmarks.landmark[145].y < 0.01
-            if blink and not left_click_flag:
+            # Blink detection (difference between upper and lower eyelids)
+            left_eye_blink = (
+                face_landmarks.landmark[159].y - face_landmarks.landmark[145].y < 0.01
+            )
+            if left_eye_blink and not left_click_flag:
                 pyautogui.click()
                 left_click_flag = True
-            elif not blink:
+            elif not left_eye_blink:
                 left_click_flag = False
 
-    # Emotion Detection
-    detected_emotion = detect_emotion(frame)
-    cv2.putText(frame, f"Emotion: {detected_emotion}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    # Display the webcam feed
+    cv2.imshow("Eye Tracking with Crosshairs", frame)
 
-    # Show the frame
-    cv2.imshow("Eye Tracking & Emotion Detection", frame)
-
-    # Exit on pressing 'q'
+    # Exit the loop when 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

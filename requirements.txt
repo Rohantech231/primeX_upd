@@ -6,3 +6,4 @@ fer
 mtcnn
 numpy
 python-dotenv
+moviepy
