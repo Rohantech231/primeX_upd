@@ -3,3 +3,4 @@ dlib
 numpy
 scipy
 pyautogui
+pyobjc-core

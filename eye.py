@@ -65,13 +65,27 @@ while cap.isOpened():
         cv2.circle(frame, left_eye_center, 5, (255, 0, 0), -1)
         cv2.circle(frame, right_eye_center, 5, (255, 0, 0), -1)
 
-        # Move mouse based on average eye center
-        avg_x = int((left_eye_center[0] + right_eye_center[0]) / 2)
-        avg_y = int((left_eye_center[1] + right_eye_center[1]) / 2)
+        # Calculate the average center of both eyes
+        avg_x = (left_eye_center[0] + right_eye_center[0]) // 2
+        avg_y = (left_eye_center[1] + right_eye_center[1]) // 2
+
+        # Debugging: Print coordinates to verify
+        print(f"Eye center (avg_x, avg_y): {avg_x}, {avg_y}")
+
+        # Map to screen size
         screen_width, screen_height = pyautogui.size()
         mouse_x = int((avg_x / frame.shape[1]) * screen_width)
         mouse_y = int((avg_y / frame.shape[0]) * screen_height)
-        pyautogui.moveTo(mouse_x, mouse_y)
+
+        # Debugging: Print mapped mouse position
+        print(f"Mapped mouse position: {mouse_x}, {mouse_y}")
+
+        # Move the mouse
+        pyautogui.moveTo(mouse_x, mouse_y, duration=0.1)  # Adding a small duration for smoother movement
+
+        # Verify if the mouse is actually moving
+        current_mouse_x, current_mouse_y = pyautogui.position()
+        print(f"Current mouse position: {current_mouse_x}, {current_mouse_y}")
 
         # Calculate EAR for blink detection
         left_ear = calculate_ear(left_eye)
