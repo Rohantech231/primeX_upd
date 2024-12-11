@@ -1,0 +1,8 @@
+opencv-python
+opencv-contrib-python
+mediapipe
+pyautogui
+fer
+mtcnn
+numpy
+python-dotenv
