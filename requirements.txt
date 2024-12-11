@@ -1,9 +1,5 @@
 opencv-python
-opencv-contrib-python
-mediapipe
-pyautogui
-fer
-mtcnn
+dlib
 numpy
-python-dotenv
-moviepy
+scipy
+pyautogui
