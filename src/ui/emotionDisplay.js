@@ -1,8 +1,7 @@
 const emotions = ['happiness', 'sadness', 'anger'];
 
-export function updateEmotionMetrics(expressions) {
-  emotions.forEach(emotion => {
-    const value = Math.round(expressions[emotion] * 100);
+export function updateEmotionMetrics(emotions) {
+  Object.entries(emotions).forEach(([emotion, value]) => {
     updateProgressBar(emotion, value);
   });
 }
