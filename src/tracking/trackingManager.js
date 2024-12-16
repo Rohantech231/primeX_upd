@@ -1,102 +1,100 @@
 import * as faceapi from 'face-api.js';
 import { setupCamera } from '../utils/cameraUtils.js';
 import { updateEmotionMetrics } from '../ui/emotionDisplay.js';
-import { processEyeTracking } from './eyeTracker.js';
-import { processEmotions } from './emotionTracker.js';
-import { MODELS_PATH } from '../config/constants.js';
+import { eyeTracker } from './eyeTracker.js';
+import { MODEL_PATHS, MODEL_OPTIONS } from '../config/modelPaths.js';
 
-let isTracking = false;
-let videoElement;
-let canvas;
-let lastEmotionUpdate = 0;
-
-export async function initializeTracking() {
-  try {
-    await loadModels();
-    
-    videoElement = document.getElementById('video');
-    canvas = document.getElementById('overlay');
-    
-    return true;
-  } catch (error) {
-    console.error('Error initializing tracking:', error);
-    throw error;
+class TrackingManager {
+  constructor() {
+    this.isTracking = false;
+    this.videoElement = null;
+    this.canvas = null;
   }
-}
 
-async function loadModels() {
-  try {
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.load(MODELS_PATH),
-      faceapi.nets.faceLandmark68Net.load(MODELS_PATH),
-      faceapi.nets.faceExpressionNet.load(MODELS_PATH)
-    ]);
-  } catch (error) {
-    console.error('Error loading models:', error);
-    throw new Error('Failed to load face detection models');
-  }
-}
-
-export async function startTracking() {
-  if (isTracking) return;
-  
-  try {
-    await setupCamera(videoElement);
-    isTracking = true;
-    requestAnimationFrame(track);
-    return true;
-  } catch (error) {
-    console.error('Error starting tracking:', error);
-    throw error;
-  }
-}
-
-export function stopTracking() {
-  isTracking = false;
-  if (videoElement && videoElement.srcObject) {
-    const tracks = videoElement.srcObject.getTracks();
-    tracks.forEach(track => track.stop());
-    videoElement.srcObject = null;
-  }
-}
-
-async function track() {
-  if (!isTracking) return;
-  
-  try {
-    const detections = await faceapi
-      .detectAllFaces(videoElement, new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks()
-      .withFaceExpressions();
+  async initialize() {
+    try {
+      this.videoElement = document.getElementById('video');
+      this.canvas = document.getElementById('overlay');
       
-    const displaySize = { width: videoElement.width, height: videoElement.height };
-    faceapi.matchDimensions(canvas, displaySize);
-    
-    const resizedDetections = faceapi.resizeResults(detections, displaySize);
-    
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-    
-    if (resizedDetections.length > 0) {
-      const detection = resizedDetections[0];
+      await this.loadModels();
+      await setupCamera(this.videoElement);
       
-      // Process emotions with rate limiting
-      const now = Date.now();
-      if (now - lastEmotionUpdate > 100) { // Update every 100ms
-        const emotions = processEmotions(detection.expressions);
-        updateEmotionMetrics(emotions);
-        lastEmotionUpdate = now;
+      return true;
+    } catch (error) {
+      console.error('Initialization error:', error);
+      throw error;
+    }
+  }
+
+  async loadModels() {
+    try {
+      const modelLoadPromises = [
+        faceapi.nets.tinyFaceDetector.load(MODEL_PATHS.tinyFaceDetector),
+        faceapi.nets.faceLandmark68Net.load(MODEL_PATHS.faceLandmark68),
+        faceapi.nets.faceExpressionNet.load(MODEL_PATHS.faceExpression)
+      ];
+
+      await Promise.all(modelLoadPromises);
+    } catch (error) {
+      console.error('Error loading models:', error);
+      throw new Error('Failed to load face detection models');
+    }
+  }
+
+  start() {
+    if (this.isTracking) return;
+    
+    this.isTracking = true;
+    eyeTracker.start();
+    requestAnimationFrame(() => this.track());
+  }
+
+  stop() {
+    this.isTracking = false;
+    eyeTracker.stop();
+  }
+
+  async track() {
+    if (!this.isTracking) return;
+
+    try {
+      const detectorOptions = new faceapi.TinyFaceDetectorOptions(MODEL_OPTIONS.tinyFaceDetector);
+      
+      const detections = await faceapi
+        .detectSingleFace(this.videoElement, detectorOptions)
+        .withFaceLandmarks()
+        .withFaceExpressions();
+
+      if (!detections) {
+        requestAnimationFrame(() => this.track());
+        return;
       }
+
+      const displaySize = { 
+        width: this.videoElement.width, 
+        height: this.videoElement.height 
+      };
+      
+      const resizedDetection = faceapi.resizeResults(detections, displaySize);
+      
+      const ctx = this.canvas.getContext('2d');
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      // Update emotion metrics
+      updateEmotionMetrics(resizedDetection.expressions);
       
       // Process eye tracking
-      processEyeTracking(detection.landmarks.positions);
+      eyeTracker.processEyeTracking(resizedDetection.landmarks.positions);
       
       // Draw face landmarks
-      faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+      faceapi.draw.drawFaceLandmarks(this.canvas, resizedDetection);
+
+      requestAnimationFrame(() => this.track());
+    } catch (error) {
+      console.error('Tracking error:', error);
+      this.stop();
     }
-    
-    requestAnimationFrame(track);
-  } catch (error) {
-    console.error('Error during tracking:', error);
-    stopTracking();
   }
 }
+
+export const trackingManager = new TrackingManager();

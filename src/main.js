@@ -1,4 +1,4 @@
-import { initializeTracking } from './tracking/trackingManager.js';
+import { trackingManager } from './tracking/trackingManager.js';
 import { setupUI } from './ui/uiManager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusElement = document.getElementById('status');
   
   try {
-    await initializeTracking();
+    await trackingManager.initialize();
     startButton.disabled = false;
     statusElement.textContent = 'Ready to start tracking';
   } catch (error) {

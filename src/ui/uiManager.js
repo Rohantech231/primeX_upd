@@ -1,47 +1,42 @@
-import { startTracking, stopTracking } from '../tracking/trackingManager.js';
+import { trackingManager } from '../tracking/trackingManager.js';
+import { AccessibilityController } from '../utils/accessibilityUtils.js';
 
 export function setupUI() {
   const startButton = document.getElementById('startButton');
   const statusElement = document.getElementById('status');
   let isTracking = false;
   
+  // Initialize accessibility features
+  new AccessibilityController();
+  
   startButton.addEventListener('click', async () => {
     try {
       if (!isTracking) {
-        await startTracking();
+        await requestPermissions();
+        trackingManager.start();
         isTracking = true;
         startButton.textContent = 'Stop Tracking';
         statusElement.textContent = 'Tracking active';
       } else {
-        stopTracking();
+        trackingManager.stop();
         isTracking = false;
         startButton.textContent = 'Start Tracking';
         statusElement.textContent = 'Tracking stopped';
       }
     } catch (error) {
-      console.error('Tracking error:', error);
+      console.error('Error:', error);
       statusElement.textContent = error.message;
-      startButton.textContent = 'Start Tracking';
-      isTracking = false;
     }
   });
-  
-  setupEventListeners();
 }
 
-function setupEventListeners() {
-  document.addEventListener('eyeClick', handleEyeClick);
-  document.addEventListener('eyeMove', handleEyeMove);
-}
-
-function handleEyeClick(event) {
-  const { timestamp } = event.detail;
-  console.log('Eye click detected:', timestamp);
-  // Implement click handling logic here
-}
-
-function handleEyeMove(event) {
-  const { x, y, timestamp } = event.detail;
-  console.log('Eye movement detected:', { x, y, timestamp });
-  // Implement mouse movement logic here
+async function requestPermissions() {
+  try {
+    // Request camera permission
+    await navigator.mediaDevices.getUserMedia({ video: true });
+    return true;
+  } catch (error) {
+    console.error('Permission error:', error);
+    throw new Error('Camera access denied');
+  }
 }
