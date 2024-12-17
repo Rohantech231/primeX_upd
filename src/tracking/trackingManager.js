@@ -2,7 +2,8 @@ import * as faceapi from 'face-api.js';
 import { setupCamera } from '../utils/cameraUtils.js';
 import { updateEmotionMetrics } from '../ui/emotionDisplay.js';
 import { eyeTracker } from './eyeTracker.js';
-import { MODEL_PATHS, MODEL_OPTIONS } from '../config/modelPaths.js';
+import { MODEL_OPTIONS } from '../config/modelPaths.js';
+import { modelLoader } from '../config/modelLoader.js';
 
 class TrackingManager {
   constructor() {
@@ -13,31 +14,28 @@ class TrackingManager {
 
   async initialize() {
     try {
+      // Get DOM elements
       this.videoElement = document.getElementById('video');
       this.canvas = document.getElementById('overlay');
       
-      await this.loadModels();
+      if (!this.videoElement || !this.canvas) {
+        throw new Error('Required video or canvas elements not found');
+      }
+
+      // Load models first
+      await modelLoader.loadModels();
+      
+      // Setup camera after models are loaded
       await setupCamera(this.videoElement);
+      
+      // Set canvas dimensions to match video
+      this.canvas.width = this.videoElement.width;
+      this.canvas.height = this.videoElement.height;
       
       return true;
     } catch (error) {
       console.error('Initialization error:', error);
-      throw error;
-    }
-  }
-
-  async loadModels() {
-    try {
-      const modelLoadPromises = [
-        faceapi.nets.tinyFaceDetector.load(MODEL_PATHS.tinyFaceDetector),
-        faceapi.nets.faceLandmark68Net.load(MODEL_PATHS.faceLandmark68),
-        faceapi.nets.faceExpressionNet.load(MODEL_PATHS.faceExpression)
-      ];
-
-      await Promise.all(modelLoadPromises);
-    } catch (error) {
-      console.error('Error loading models:', error);
-      throw new Error('Failed to load face detection models');
+      throw new Error(`Failed to initialize tracking: ${error.message}`);
     }
   }
 
@@ -46,7 +44,7 @@ class TrackingManager {
     
     this.isTracking = true;
     eyeTracker.start();
-    requestAnimationFrame(() => this.track());
+    this.track();
   }
 
   stop() {
@@ -65,34 +63,32 @@ class TrackingManager {
         .withFaceLandmarks()
         .withFaceExpressions();
 
-      if (!detections) {
-        requestAnimationFrame(() => this.track());
-        return;
+      if (detections) {
+        const displaySize = { 
+          width: this.videoElement.width, 
+          height: this.videoElement.height 
+        };
+        
+        const resizedDetection = faceapi.resizeResults(detections, displaySize);
+        
+        const ctx = this.canvas.getContext('2d');
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Update emotion metrics
+        updateEmotionMetrics(resizedDetection.expressions);
+        
+        // Process eye tracking
+        eyeTracker.processEyeTracking(resizedDetection.landmarks.positions);
+        
+        // Draw face landmarks
+        faceapi.draw.drawFaceLandmarks(this.canvas, resizedDetection);
       }
-
-      const displaySize = { 
-        width: this.videoElement.width, 
-        height: this.videoElement.height 
-      };
-      
-      const resizedDetection = faceapi.resizeResults(detections, displaySize);
-      
-      const ctx = this.canvas.getContext('2d');
-      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-      // Update emotion metrics
-      updateEmotionMetrics(resizedDetection.expressions);
-      
-      // Process eye tracking
-      eyeTracker.processEyeTracking(resizedDetection.landmarks.positions);
-      
-      // Draw face landmarks
-      faceapi.draw.drawFaceLandmarks(this.canvas, resizedDetection);
 
       requestAnimationFrame(() => this.track());
     } catch (error) {
       console.error('Tracking error:', error);
       this.stop();
+      throw new Error('Tracking failed. Please refresh the page and try again.');
     }
   }
 }

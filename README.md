@@ -1,101 +1,124 @@
+# Eye Tracking & Emotion Detection Web App
 
-# Eye Tracking Mouse Control
-
-This project demonstrates how to use a webcam to track eye movement and control the mouse pointer on a macOS system. 
-The mouse pointer moves according to the detected eye position, and blinking triggers a left-click.
+An advanced web application that combines eye tracking, emotion detection, and voice commands for hands-free computer interaction.
 
 ## Features
-- **Eye Tracking**: Tracks eye movement using the Dlib library.
-- **Mouse Control**: Maps eye coordinates to mouse movement using PyAutoGUI.
-- **Blink Detection**: Detects blinking to simulate a left-click.
 
-## Prerequisites
-- macOS or a compatible operating system.
-- Python 3.9 or later.
-- Webcam for real-time tracking.
+### Core Functionality
+- 👁️ Real-time eye tracking for mouse pointer control
+- 😊 Facial expression analysis for emotion detection
+- 🎯 Blink detection for interaction
+- 🎤 Voice command support
+- 🖱️ System-level mouse control
+- 📊 Real-time emotion metrics visualization
 
-## Installation
+### Voice Commands
+- "left click" - Performs a left mouse click
+- "double click" - Performs a double click
+- "right click" - Performs a right mouse click
+- "scroll up" - Scrolls the page up
+- "scroll down" - Scrolls the page down
+- "stop tracking" - Stops the tracking system
+- "start tracking" - Starts the tracking system
 
-1. Clone the repository:
+### Accessibility Features
+- ⌨️ Keyboard shortcuts for common actions
+- 🔊 Voice feedback for commands
+- 🎯 Automatic calibration for eye tracking
+- ⚡ Performance optimization for smooth tracking
+- 🌙 Dark mode support
+
+### Eye Tracking Features
+- Precise cursor control through eye movement
+- Blink detection with configurable sensitivity
+- Dwell clicking (hover to click)
+- Smooth cursor movement with acceleration
+- Eye-based scrolling zones
+
+### Emotion Detection
+- Real-time emotion analysis
+- Happiness level tracking
+- Sadness detection
+- Anger measurement
+- Emotion history tracking
+- Emotion-based theme adaptation
+
+### System Requirements
+- Modern web browser (Chrome, Firefox, Edge)
+- Webcam access
+- Microphone access (for voice commands)
+- System permissions for mouse control
+
+### Permissions Required
+1. Camera access for eye and face tracking
+2. Microphone access for voice commands
+3. System-level permissions for mouse control
+4. Notification permissions for alerts
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies:
    ```bash
-   git clone https://github.com/Rohantech231/Final-Year-Project.git
-   cd Final-Year-Project
+   npm install
    ```
-
-2. Install required Python libraries:
+3. Start the development server:
    ```bash
-   pip install -r requirements.txt
+   npm run dev
    ```
+4. Grant required permissions when prompted
+5. Follow the on-screen calibration process
 
-3. Download the Dlib facial landmarks model:
-   - Download the file [shape_predictor_68_face_landmarks.dat](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2).
-   - Extract the file and place it in the project directory.
+## Usage Tips
 
-4. (Optional) Install additional dependencies for macOS:
-   ```bash
-   pip install pyobjc-core
-   ```
+### Eye Tracking
+- Keep your face centered and well-lit
+- Maintain a consistent distance from the camera
+- Use the calibration process for optimal accuracy
+- Blink naturally - the system adapts to your blink pattern
 
-5. Grant necessary permissions on macOS:
-   - Go to **System Preferences** > **Security & Privacy** > **Privacy**.
-   - Allow **Terminal** or your IDE under **Accessibility**, **Camera**, and **Screen Recording**.
+### Voice Commands
+- Speak clearly and at a normal volume
+- Wait for the audio feedback before next command
+- Use English for best recognition
+- Check the microphone indicator for active status
 
-## Usage
+### Performance Optimization
+- Close unnecessary browser tabs
+- Ensure good lighting conditions
+- Position yourself 50-70cm from the camera
+- Use a stable internet connection
 
-1. Run the script:
-   ```bash
-   python3 eye.py
-   ```
-
-2. The webcam feed will open, and you will see real-time eye tracking.
-   - Move your eyes to move the mouse pointer.
-   - Blink to perform a left-click.
-
-3. Press `q` to quit the application.
+## Keyboard Shortcuts
+- `Space` - Start/Stop tracking
+- `Esc` - Emergency stop
+- `C` - Recalibrate
+- `M` - Toggle microphone
+- `T` - Toggle tracking
+- `D` - Toggle dark mode
 
 ## Troubleshooting
 
-- **Mouse Pointer Not Moving**:
-  - Ensure that accessibility permissions are granted.
-  - Test a simple PyAutoGUI script to verify mouse control.
+### Common Issues
+1. Tracking not starting
+   - Check camera permissions
+   - Ensure good lighting
+   - Verify browser compatibility
 
-- **Webcam Feed Lagging**:
-  - Reduce the video frame size in the script for better performance.
+2. Voice commands not working
+   - Check microphone permissions
+   - Verify microphone input level
+   - Ensure correct language settings
 
-- **Blink Detection Not Working**:
-  - Ensure that the `EAR_THRESHOLD` and `CONSEC_FRAMES` parameters are properly calibrated.
+3. Cursor movement issues
+   - Run calibration process
+   - Check system permissions
+   - Adjust sensitivity settings
 
-## File Structure
+## Contributing
 
-```
-eye-tracking-mouse-control/
-├── eye.py                     # Main script for eye tracking and mouse control
-├── requirements.txt           # List of required Python libraries
-├── shape_predictor_68_face_landmarks.dat  # Facial landmarks model (download manually)
-```
-
-## Requirements
-
-The required Python libraries are listed in `requirements.txt`:
-
-```text
-opencv-python
-dlib
-pyautogui
-scipy
-pyobjc-core  # macOS specific
-```
-
-Install them using:
-
-```bash
-pip install -r requirements.txt
-```
+Contributions are welcome! Please read our contributing guidelines for details.
 
 ## License
 
-This project is licensed under the MIT License. Feel free to modify and use it for your personal or educational purposes.
-
----
-
-**Author**: [Aditya](@AdityaSeth777) and [Rohan](@Rohantech231)
+MIT License - feel free to use and modify for your projects.

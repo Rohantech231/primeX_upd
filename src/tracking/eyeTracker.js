@@ -1,5 +1,3 @@
-import { mouseController } from './mouseController.js';
-
 const EYE_CONSTANTS = {
   BLINK_THRESHOLD: 0.25, // Adjusted for better sensitivity
   BLINK_COOLDOWN: 500,
@@ -91,9 +89,6 @@ class EyeTracker {
 
     this.calibrationData.isCalibrated = true;
   }
-
-  // Rest of the methods remain the same...
-  [Previous methods from eyeTracker.js remain unchanged]
 }
 
 export const eyeTracker = new EyeTracker();
