@@ -24,3 +24,11 @@ export function showWarning(message) {
   }
   console.warn(message);
 }
+
+export function updateLoadingProgress(progress) {
+  const statusElement = document.getElementById('status');
+  if (statusElement) {
+    statusElement.textContent = `Loading models: ${progress}%`;
+    statusElement.className = 'warning';
+  }
+}

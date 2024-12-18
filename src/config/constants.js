@@ -11,8 +11,9 @@ export const TRACKING_CONFIG = {
   BLINK_COOLDOWN: 500, // ms
   VIDEO_CONSTRAINTS: {
     facingMode: 'user',
-    width: { ideal: 640 },
-    height: { ideal: 480 }
+    width: { min: 640, ideal: 1280, max: 1920 },
+    height: { min: 480, ideal: 720, max: 1080 },
+    frameRate: { ideal: 30, max: 60 }
   }
 };
 
