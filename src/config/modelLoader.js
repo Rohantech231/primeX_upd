@@ -1,5 +1,5 @@
 import * as faceapi from 'face-api.js';
-import { MODELS_PATH } from './constants.js';
+import { MODEL_CONFIG } from './modelConfig.js';
 import { showError, showSuccess, showWarning } from '../utils/notificationUtils.js';
 import { validateModelPaths } from '../utils/modelUtils.js';
 
@@ -8,11 +8,6 @@ class ModelLoader {
     this.isLoaded = false;
     this.modelLoadAttempts = 0;
     this.maxLoadAttempts = 3;
-    this.models = {
-      tinyFaceDetector: `${MODELS_PATH}/tiny_face_detector_model-weights_manifest.json`,
-      faceLandmark68Net: `${MODELS_PATH}/face_landmark_68_model-weights_manifest.json`,
-      faceExpressionNet: `${MODELS_PATH}/face_expression_model-weights_manifest.json`
-    };
   }
 
   async loadModels() {
@@ -20,91 +15,63 @@ class ModelLoader {
 
     try {
       showWarning('Validating model paths...');
-      const pathsValid = await validateModelPaths(this.models);
+      const pathsValid = await validateModelPaths(MODEL_CONFIG.paths);
       if (!pathsValid) {
         throw new Error('Model files not found or inaccessible');
       }
 
       showWarning('Loading face detection models...');
       
-      // Reset all models before loading
-      await this.resetModels();
-      
-      // Load models sequentially with proper error handling
-      for (const [modelName, modelPath] of Object.entries(this.models)) {
-        await this.loadModelWithRetry(modelName, modelPath);
-      }
+      // Load models with proper error handling
+      await Promise.all([
+        this.loadModelWithRetry('tinyFaceDetector'),
+        this.loadModelWithRetry('faceExpressionNet')
+      ]);
 
-      // Verify all models are loaded
-      const modelsValid = await this.validateModels();
-      if (!modelsValid) {
-        throw new Error('Model validation failed after loading');
+      // Verify models are loaded correctly
+      if (!this.verifyModels()) {
+        throw new Error('Model verification failed');
       }
 
       this.isLoaded = true;
-      showSuccess('All models loaded successfully');
+      showSuccess('Models loaded successfully');
       return true;
     } catch (error) {
       this.isLoaded = false;
-      const errorMessage = `Failed to load models: ${error.message}`;
-      showError(errorMessage);
-      throw new Error(errorMessage);
+      showError(`Failed to load models: ${error.message}`);
+      throw error;
     }
   }
 
-  async resetModels() {
-    for (const modelName of Object.keys(this.models)) {
-      if (faceapi.nets[modelName]) {
-        // @ts-ignore - Reset internal model state
-        faceapi.nets[modelName].isLoaded = false;
-      }
-    }
-  }
-
-  async loadModelWithRetry(modelName, modelPath, attempt = 1) {
+  async loadModelWithRetry(modelName, attempt = 1) {
     try {
-      showWarning(`Loading ${modelName}... Attempt ${attempt}/${this.maxLoadAttempts}`);
-      
       if (!faceapi.nets[modelName]) {
-        throw new Error(`Model ${modelName} not found in face-api`);
+        throw new Error(`Model ${modelName} not found`);
       }
 
-      if (await this.isModelLoaded(modelName)) {
-        return true;
+      // Clear any existing model data
+      if (faceapi.nets[modelName].isLoaded) {
+        await faceapi.nets[modelName].dispose();
       }
 
-      await faceapi.nets[modelName].load(modelPath);
-      
-      if (!await this.isModelLoaded(modelName)) {
-        throw new Error(`Model ${modelName} failed verification after load`);
-      }
-
+      await faceapi.nets[modelName].load(MODEL_CONFIG.paths[modelName]);
       return true;
     } catch (error) {
+      console.error(`Error loading ${modelName}:`, error);
+      
       if (attempt < this.maxLoadAttempts) {
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
         await new Promise(resolve => setTimeout(resolve, delay));
-        return this.loadModelWithRetry(modelName, modelPath, attempt + 1);
+        return this.loadModelWithRetry(modelName, attempt + 1);
       }
-      throw new Error(`Failed to load ${modelName} after ${this.maxLoadAttempts} attempts`);
+      throw error;
     }
   }
 
-  async isModelLoaded(modelName) {
-    try {
-      return faceapi.nets[modelName].isLoaded;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  async validateModels() {
-    for (const modelName of Object.keys(this.models)) {
-      if (!await this.isModelLoaded(modelName)) {
-        return false;
-      }
-    }
-    return true;
+  verifyModels() {
+    return Object.keys(MODEL_CONFIG.paths).every(
+      modelName => faceapi.nets[modelName]?.isLoaded
+    );
   }
 }
 

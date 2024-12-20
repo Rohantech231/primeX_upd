@@ -7,9 +7,9 @@ export async function validateModelPaths(paths) {
         return false;
       }
       
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.error(`Invalid content type for ${name}: ${contentType}`);
+      const data = await response.json();
+      if (!data || !Array.isArray(data)) {
+        console.error(`Invalid model manifest for ${name}`);
         return false;
       }
     } catch (error) {
