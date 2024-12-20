@@ -3,7 +3,14 @@ export async function validateModelPaths(paths) {
     try {
       const response = await fetch(path);
       if (!response.ok) {
-        throw new Error(`Failed to load ${name} from ${path}`);
+        console.error(`Failed to load ${name} from ${path}: ${response.statusText}`);
+        return false;
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error(`Invalid content type for ${name}: ${contentType}`);
+        return false;
       }
     } catch (error) {
       console.error(`Error validating model path for ${name}:`, error);
