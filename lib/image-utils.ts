@@ -1,4 +1,4 @@
-export async function captureImageFromVideo(video: HTMLVideoElement): Promise<string> {
+export async function captureImageFromVideo(video: HTMLVideoElement): Promise<Blob> {
   // Wait for video to be ready
   if (video.readyState !== video.HAVE_ENOUGH_DATA) {
     await new Promise(resolve => {
@@ -15,9 +15,17 @@ export async function captureImageFromVideo(video: HTMLVideoElement): Promise<st
   
   ctx.drawImage(video, 0, 0);
   
-  // Convert to base64 and remove data URL prefix
-  const base64Data = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-  
-  if (!base64Data) throw new Error('Failed to capture image');
-  return base64Data;
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error('Failed to capture image'));
+        }
+      },
+      'image/jpeg',
+      0.8
+    );
+  });
 }
