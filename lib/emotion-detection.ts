@@ -1,5 +1,4 @@
 import { HfInference } from '@huggingface/inference';
-import { captureImageFromVideo } from './image-utils';
 
 const hf = new HfInference(process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY);
 const MODEL_ID = 'dima806/facial_emotions_image_detection';
