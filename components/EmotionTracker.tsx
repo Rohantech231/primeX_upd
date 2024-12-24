@@ -19,20 +19,21 @@ export function EmotionTracker() {
   const requestPermission = async () => {
     try {
       setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'user',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 640 },
+          height: { ideal: 480 }
         } 
       });
       
-      setStream(stream);
-      setPermission(true);
-      
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
       }
+      
+      setStream(mediaStream);
+      setPermission(true);
     } catch (err) {
       console.error('Error accessing webcam:', err);
       setError(err instanceof Error ? err.message : 'Failed to access camera');
@@ -44,7 +45,7 @@ export function EmotionTracker() {
     let interval: NodeJS.Timeout;
 
     const detectLoop = async () => {
-      if (videoRef.current && permission) {
+      if (videoRef.current && permission && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
         try {
           const emotions = await detectEmotions(videoRef.current);
           if (emotions) {
@@ -61,8 +62,7 @@ export function EmotionTracker() {
     };
 
     if (permission) {
-      // Run detection every 1 second to avoid API rate limits
-      interval = setInterval(detectLoop, 1000);
+      interval = setInterval(detectLoop, 2000);
     }
 
     return () => {
@@ -93,13 +93,13 @@ export function EmotionTracker() {
 
   return (
     <div className="space-y-4">
-      <div className="relative aspect-video max-w-2xl mx-auto rounded-lg overflow-hidden border-2 border-border">
+      <div className="relative aspect-video max-w-2xl mx-auto rounded-lg overflow-hidden border-2 border-border bg-black">
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
         {currentEmotions && <EmotionOverlay emotions={currentEmotions} />}
       </div>
