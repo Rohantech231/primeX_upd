@@ -1,28 +1,26 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { forwardRef } from 'react';
 
 interface VideoFeedProps {
   onVideoMount: (videoElement: HTMLVideoElement) => void;
   className?: string;
 }
 
-export function VideoFeed({ onVideoMount, className = '' }: VideoFeedProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (videoRef.current) {
-      onVideoMount(videoRef.current);
-    }
-  }, [onVideoMount]);
-
-  return (
-    <video
-      ref={videoRef}
-      autoPlay
-      playsInline
-      muted
-      className={`w-full h-full object-cover mirror-mode ${className}`}
-    />
-  );
-}
+export const VideoFeed = forwardRef<HTMLVideoElement, VideoFeedProps>(
+  ({ onVideoMount, className = '' }, ref) => {
+    return (
+      <video
+        ref={ref}
+        autoPlay
+        playsInline
+        muted
+        className={`w-full h-full object-cover mirror-mode ${className}`}
+        onLoadedMetadata={(e) => {
+          const video = e.target as HTMLVideoElement;
+          onVideoMount(video);
+        }}
+      />
+    );
+  }
+);
