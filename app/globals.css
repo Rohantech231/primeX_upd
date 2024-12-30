@@ -86,4 +86,11 @@
   .mirror-mode {
     transform: scaleX(-1);
   }
+  
+  /* Ensure video element takes full size */
+  video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
 }
