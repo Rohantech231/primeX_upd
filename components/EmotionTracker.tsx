@@ -8,7 +8,6 @@ import { EmotionChart } from './EmotionChart';
 import { useCamera } from '@/hooks/useCamera';
 import { useEmotionDetection } from '@/hooks/useEmotionDetection';
 import { initializeDetection } from '@/lib/emotion-detection';
-import { ExportPanel } from './ExportPanel';
 
 export function EmotionTracker() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -16,7 +15,14 @@ export function EmotionTracker() {
   const { currentEmotions, isDetecting } = useEmotionDetection(videoRef);
 
   useEffect(() => {
-    initializeDetection().catch(console.error);
+    const init = async () => {
+      try {
+        await initializeDetection();
+      } catch (error) {
+        console.error('Failed to initialize detection:', error);
+      }
+    };
+    init();
   }, []);
 
   useEffect(() => {
@@ -46,10 +52,7 @@ export function EmotionTracker() {
         {currentEmotions && <EmotionOverlay emotions={currentEmotions} />}
       </div>
 
-      <div className="space-y-4">
-        <EmotionChart currentEmotions={currentEmotions} />
-        <ExportPanel currentEmotions={currentEmotions} />
-      </div>
+      <EmotionChart currentEmotions={currentEmotions} />
     </div>
   );
 }

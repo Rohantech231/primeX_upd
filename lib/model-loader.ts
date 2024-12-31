@@ -2,21 +2,29 @@
 
 import * as faceapi from 'face-api.js';
 
+let modelsLoaded = false;
+
 export async function loadModels() {
-  // Use CDN URLs for models to avoid local file issues
+  if (modelsLoaded) return true;
+  
   const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
   
   try {
     await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
+      faceapi.nets.tinyFaceDetector.load(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.load(MODEL_URL),
+      faceapi.nets.faceExpressionNet.load(MODEL_URL)
     ]);
     
-    console.log('Models loaded successfully from CDN');
+    modelsLoaded = true;
+    console.log('Models loaded successfully');
     return true;
   } catch (error) {
     console.error('Error loading models:', error);
     throw error;
   }
+}
+
+export function areModelsLoaded() {
+  return modelsLoaded;
 }

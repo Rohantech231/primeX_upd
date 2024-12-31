@@ -1,7 +1,7 @@
 'use client';
 
 import * as faceapi from 'face-api.js';
-import { loadModels } from './model-loader';
+import { loadModels, areModelsLoaded } from './model-loader';
 
 export type EmotionData = {
   happiness: number;
@@ -10,13 +10,10 @@ export type EmotionData = {
   timestamp: number;
 };
 
-let isModelLoaded = false;
-
 export async function initializeDetection() {
-  if (!isModelLoaded) {
+  if (!areModelsLoaded()) {
     try {
       await loadModels();
-      isModelLoaded = true;
       console.log('Face detection initialized successfully');
     } catch (error) {
       console.error('Failed to initialize face detection:', error);
@@ -26,18 +23,22 @@ export async function initializeDetection() {
 }
 
 export async function detectEmotions(video: HTMLVideoElement): Promise<EmotionData | null> {
-  if (!isModelLoaded) {
+  if (!areModelsLoaded()) {
     await initializeDetection();
   }
 
   try {
-    // Ensure video is playing and has enough data
     if (video.readyState !== video.HAVE_ENOUGH_DATA) {
       return null;
     }
 
+    const options = new faceapi.TinyFaceDetectorOptions({ 
+      inputSize: 512,
+      scoreThreshold: 0.3
+    });
+
     const detection = await faceapi
-      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }))
+      .detectSingleFace(video, options)
       .withFaceLandmarks()
       .withFaceExpressions();
 
