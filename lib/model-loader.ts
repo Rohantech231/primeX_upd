@@ -3,7 +3,8 @@
 import * as faceapi from 'face-api.js';
 
 export async function loadModels() {
-  const MODEL_URL = '/models';
+  // Use CDN URLs for models to avoid local file issues
+  const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
   
   try {
     await Promise.all([
@@ -12,7 +13,8 @@ export async function loadModels() {
       faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
     ]);
     
-    console.log('Models loaded successfully');
+    console.log('Models loaded successfully from CDN');
+    return true;
   } catch (error) {
     console.error('Error loading models:', error);
     throw error;

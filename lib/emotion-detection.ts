@@ -1,6 +1,5 @@
 'use client';
 
-import * as tf from '@tensorflow/tfjs';
 import * as faceapi from 'face-api.js';
 import { loadModels } from './model-loader';
 
@@ -15,29 +14,39 @@ let isModelLoaded = false;
 
 export async function initializeDetection() {
   if (!isModelLoaded) {
-    await tf.ready();
-    await loadModels();
-    isModelLoaded = true;
+    try {
+      await loadModels();
+      isModelLoaded = true;
+      console.log('Face detection initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize face detection:', error);
+      throw error;
+    }
   }
 }
 
 export async function detectEmotions(video: HTMLVideoElement): Promise<EmotionData | null> {
+  if (!isModelLoaded) {
+    await initializeDetection();
+  }
+
   try {
-    if (!isModelLoaded) {
-      await initializeDetection();
-    }
-
-    const detections = await faceapi
-      .detectSingleFace(video)
-      .withFaceLandmarks()
-      .withFaceExpressions();
-
-    if (!detections) {
+    // Ensure video is playing and has enough data
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
       return null;
     }
 
-    const { expressions } = detections;
+    const detection = await faceapi
+      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }))
+      .withFaceLandmarks()
+      .withFaceExpressions();
 
+    if (!detection) {
+      return null;
+    }
+
+    const { expressions } = detection;
+    
     return {
       happiness: expressions.happy,
       sadness: expressions.sad,
