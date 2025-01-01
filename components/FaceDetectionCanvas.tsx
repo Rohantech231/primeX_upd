@@ -31,37 +31,30 @@ export function FaceDetectionCanvas({ videoRef }: FaceDetectionCanvasProps) {
 
       if (detections) {
         const resizedDetections = faceapi.resizeResults(detections, displaySize);
-        canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Clear previous drawings
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Draw face detection box
-        faceapi.draw.drawDetections(canvas, resizedDetections);
-        
-        // Draw face landmarks
-        faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-        
-        // Draw expressions
-        if (resizedDetections.expressions) {
-          const expressions = resizedDetections.expressions;
-          const maxExpression = Object.entries(expressions).reduce((a, b) => 
-            expressions[a] > expressions[b] ? a : b
-          )[0];
-          
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.font = '16px Arial';
-            ctx.fillStyle = 'white';
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = 3;
-            ctx.strokeText(maxExpression, 10, 30);
-            ctx.fillText(maxExpression, 10, 30);
-          }
-        }
+        // Draw face outline
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 2;
+        const box = resizedDetections.detection.box;
+        ctx.beginPath();
+        ctx.rect(box.x, box.y, box.width, box.height);
+        ctx.stroke();
       }
 
       requestAnimationFrame(drawDetections);
     };
 
     drawDetections();
+
+    return () => {
+      const ctx = canvas.getContext('2d');
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    };
   }, [videoRef]);
 
   return (

@@ -1,7 +1,6 @@
 'use client';
 
 import { EmotionTracker } from '@/components/EmotionTracker';
-import { EmotionDashboard } from '@/components/EmotionDashboard';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export default function Home() {
@@ -13,7 +12,6 @@ export default function Home() {
             Emotion Tracker
           </h1>
           <EmotionTracker />
-          <EmotionDashboard />
         </div>
       </main>
     </ThemeProvider>
