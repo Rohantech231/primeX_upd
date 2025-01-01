@@ -1,7 +1,7 @@
 'use client';
 
 import * as faceapi from 'face-api.js';
-import { loadModels, areModelsLoaded } from './model-loader';
+import { loadModels } from './model-loader';
 
 export type EmotionData = {
   happiness: number;
@@ -10,10 +10,13 @@ export type EmotionData = {
   timestamp: number;
 };
 
+let isInitialized = false;
+
 export async function initializeDetection() {
-  if (!areModelsLoaded()) {
+  if (!isInitialized) {
     try {
       await loadModels();
+      isInitialized = true;
       console.log('Face detection initialized successfully');
     } catch (error) {
       console.error('Failed to initialize face detection:', error);
@@ -23,18 +26,14 @@ export async function initializeDetection() {
 }
 
 export async function detectEmotions(video: HTMLVideoElement): Promise<EmotionData | null> {
-  if (!areModelsLoaded()) {
+  if (!isInitialized) {
     await initializeDetection();
   }
 
   try {
-    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-      return null;
-    }
-
     const options = new faceapi.TinyFaceDetectorOptions({ 
-      inputSize: 512,
-      scoreThreshold: 0.3
+      inputSize: 224,  // Reduced for better performance
+      scoreThreshold: 0.2  // Lower threshold for better detection
     });
 
     const detection = await faceapi
@@ -49,9 +48,9 @@ export async function detectEmotions(video: HTMLVideoElement): Promise<EmotionDa
     const { expressions } = detection;
     
     return {
-      happiness: expressions.happy,
-      sadness: expressions.sad,
-      anger: expressions.angry,
+      happiness: expressions.happy || 0,
+      sadness: expressions.sad || 0,
+      anger: expressions.angry || 0,
       timestamp: Date.now(),
     };
   } catch (error) {

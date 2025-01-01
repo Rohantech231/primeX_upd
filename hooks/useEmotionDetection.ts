@@ -10,7 +10,7 @@ export function useEmotionDetection(videoRef: React.RefObject<HTMLVideoElement>)
 
   useEffect(() => {
     const startDetection = async () => {
-      if (!videoRef.current || !videoRef.current.readyState) return;
+      if (!videoRef.current || videoRef.current.readyState < 2) return;
       
       try {
         setIsDetecting(true);
@@ -26,14 +26,25 @@ export function useEmotionDetection(videoRef: React.RefObject<HTMLVideoElement>)
     };
 
     // Start detection loop when video is ready
+    const startDetectionLoop = () => {
+      if (detectionInterval.current) {
+        clearInterval(detectionInterval.current);
+      }
+      detectionInterval.current = setInterval(startDetection, 1000); // Reduced frequency for better performance
+    };
+
     if (videoRef.current && videoRef.current.readyState >= 2) {
-      detectionInterval.current = setInterval(startDetection, 500);
+      startDetectionLoop();
     }
+
+    const videoElement = videoRef.current;
+    videoElement?.addEventListener('loadeddata', startDetectionLoop);
 
     return () => {
       if (detectionInterval.current) {
         clearInterval(detectionInterval.current);
       }
+      videoElement?.removeEventListener('loadeddata', startDetectionLoop);
     };
   }, [videoRef]);
 

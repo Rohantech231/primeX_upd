@@ -4,16 +4,17 @@ import * as faceapi from 'face-api.js';
 
 let modelsLoaded = false;
 
+// Use a more reliable CDN
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
 export async function loadModels() {
   if (modelsLoaded) return true;
   
-  const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-  
   try {
     await Promise.all([
-      faceapi.nets.tinyFaceDetector.load(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.load(MODEL_URL),
-      faceapi.nets.faceExpressionNet.load(MODEL_URL)
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
     ]);
     
     modelsLoaded = true;
@@ -23,8 +24,4 @@ export async function loadModels() {
     console.error('Error loading models:', error);
     throw error;
   }
-}
-
-export function areModelsLoaded() {
-  return modelsLoaded;
 }
