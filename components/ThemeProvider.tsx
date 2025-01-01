@@ -2,48 +2,27 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 
-export type Emotion = 'happiness' | 'sadness' | 'anger' | 'neutral';
-
-const themes: Record<Emotion, { background: string; text: string }> = {
-  happiness: {
-    background: 'bg-yellow-50',
-    text: 'text-yellow-900',
-  },
-  sadness: {
-    background: 'bg-blue-50',
-    text: 'text-blue-900',
-  },
-  anger: {
-    background: 'bg-red-50',
-    text: 'text-red-900',
-  },
-  neutral: {
-    background: 'bg-background',
-    text: 'text-foreground',
-  },
-};
+type Theme = 'light' | 'dark';
 
 const ThemeContext = createContext<{
-  currentEmotion: Emotion;
-  setEmotion: (emotion: Emotion) => void;
-  theme: { background: string; text: string };
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
 }>({
-  currentEmotion: 'neutral',
-  setEmotion: () => {},
-  theme: themes.neutral,
+  theme: 'light',
+  setTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [currentEmotion, setCurrentEmotion] = useState<Emotion>('neutral');
-  const [theme, setTheme] = useState(themes.neutral);
+  const [theme, setTheme] = useState<Theme>('light');
 
-  const setEmotion = (emotion: Emotion) => {
-    setCurrentEmotion(emotion);
-    setTheme(themes[emotion]);
-  };
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+  }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ currentEmotion, setEmotion, theme }}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

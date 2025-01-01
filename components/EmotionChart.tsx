@@ -30,7 +30,7 @@ export function EmotionChart({ currentEmotions }: EmotionChartProps) {
         const newHistory = [...prev, {
           ...currentEmotions,
           time: new Date().toLocaleTimeString()
-        }].slice(-20); // Keep last 20 readings
+        }].slice(-20);
         return newHistory;
       });
     }
@@ -86,7 +86,7 @@ export function EmotionChart({ currentEmotions }: EmotionChartProps) {
             <Line
               type="monotone"
               dataKey="happiness"
-              stroke="hsl(var(--chart-1))"
+              stroke="#22c55e"
               strokeWidth={2}
               dot={false}
               name="Happiness"
@@ -94,7 +94,7 @@ export function EmotionChart({ currentEmotions }: EmotionChartProps) {
             <Line
               type="monotone"
               dataKey="sadness"
-              stroke="hsl(var(--chart-2))"
+              stroke="#60a5fa"
               strokeWidth={2}
               dot={false}
               name="Sadness"
@@ -102,7 +102,7 @@ export function EmotionChart({ currentEmotions }: EmotionChartProps) {
             <Line
               type="monotone"
               dataKey="anger"
-              stroke="hsl(var(--chart-3))"
+              stroke="#ef4444"
               strokeWidth={2}
               dot={false}
               name="Anger"
