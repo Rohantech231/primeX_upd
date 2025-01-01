@@ -1,101 +1,76 @@
 
-# Eye Tracking Mouse Control
+# PrimeX  - Clutch Your Emotions
 
-This project demonstrates how to use a webcam to track eye movement and control the mouse pointer on a macOS system. 
-The mouse pointer moves according to the detected eye position, and blinking triggers a left-click.
+![](./images/3.jpeg)
 
-## Features
-- **Eye Tracking**: Tracks eye movement using the Dlib library.
-- **Mouse Control**: Maps eye coordinates to mouse movement using PyAutoGUI.
-- **Blink Detection**: Detects blinking to simulate a left-click.
-
-## Prerequisites
-- macOS or a compatible operating system.
-- Python 3.9 or later.
-- Webcam for real-time tracking.
-
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Rohantech231/Final-Year-Project.git
-   cd Final-Year-Project
-   ```
-
-2. Install required Python libraries:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Download the Dlib facial landmarks model:
-   - Download the file [shape_predictor_68_face_landmarks.dat](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2).
-   - Extract the file and place it in the project directory.
-
-4. (Optional) Install additional dependencies for macOS:
-   ```bash
-   pip install pyobjc-core
-   ```
-
-5. Grant necessary permissions on macOS:
-   - Go to **System Preferences** > **Security & Privacy** > **Privacy**.
-   - Allow **Terminal** or your IDE under **Accessibility**, **Camera**, and **Screen Recording**.
-
-## Usage
-
-1. Run the script:
-   ```bash
-   python3 eye.py
-   ```
-
-2. The webcam feed will open, and you will see real-time eye tracking.
-   - Move your eyes to move the mouse pointer.
-   - Blink to perform a left-click.
-
-3. Press `q` to quit the application.
-
-## Troubleshooting
-
-- **Mouse Pointer Not Moving**:
-  - Ensure that accessibility permissions are granted.
-  - Test a simple PyAutoGUI script to verify mouse control.
-
-- **Webcam Feed Lagging**:
-  - Reduce the video frame size in the script for better performance.
-
-- **Blink Detection Not Working**:
-  - Ensure that the `EAR_THRESHOLD` and `CONSEC_FRAMES` parameters are properly calibrated.
-
-## File Structure
-
-```
-eye-tracking-mouse-control/
-├── eye.py                     # Main script for eye tracking and mouse control
-├── requirements.txt           # List of required Python libraries
-├── shape_predictor_68_face_landmarks.dat  # Facial landmarks model (download manually)
-```
-
-## Requirements
-
-The required Python libraries are listed in `requirements.txt`:
-
-```text
-opencv-python
-dlib
-pyautogui
-scipy
-pyobjc-core  # macOS specific
-```
-
-Install them using:
-
-```bash
-pip install -r requirements.txt
-```
-
-## License
-
-This project is licensed under the MIT License. Feel free to modify and use it for your personal or educational purposes.
+A modern, privacy-first application built with **Next.js** to detect, analyze, and visualize emotions in real time using your webcam. Experience seamless performance, cutting-edge technology, and a user-friendly interface.  
 
 ---
 
-**Author**: [Aditya](@AdityaSeth777) and [Rohan](@Rohantech231)
+## Features  
+
+- **Real-Time Emotion Detection:**  
+  Leverages **TensorFlow.js** for high-accuracy facial expression analysis.  
+- **Dynamic Emotion Visualization:**  
+  Real-time overlays with expressive emoji indicators.  
+- **Mood-Based Theme Switching:**  
+  Adaptive UI themes based on detected emotions.  
+- **Personalized Recommendations:**  
+  Curated suggestions tailored to your emotional state.  
+- **Emotion Statistics Dashboard:**  
+  Interactive and insightful data visualization using **Recharts**.  
+- **Data Export Options:**  
+  Export emotion statistics in **JSON** or **PDF** format using **FileSaver.js** and **jsPDF**.  
+- **Fully Responsive Design:**  
+  Optimized for all devices, ensuring a seamless experience across platforms.  
+- **Privacy-First Approach:**  
+  All processing is done locally in your browser—no data is ever sent to a server.  
+
+---
+
+## Getting Started  
+
+Follow these steps to run the application locally:  
+
+1. Clone the repository:  
+   ```bash  
+   git clone https://github.com/your-username/primex.git  
+   cd primex  
+   ```  
+
+2. Install dependencies:  
+   ```bash  
+   npm install  
+   ```  
+
+3. Start the development server:  
+   ```bash  
+   npm run dev  
+   ```  
+
+4. Open your browser and navigate to the provided URL.  
+
+5. Grant camera permissions when prompted.  
+
+---
+
+## Technology Stack  
+
+- **Framework:** Next.js 13 with App Router  
+- **Emotion Detection:** TensorFlow.js  
+- **Data Visualization:** Recharts  
+- **Styling:** Tailwind CSS  
+- **UI Components:** shadcn/ui  
+- **Export Tools:** FileSaver.js, jsPDF  
+
+---
+
+## Privacy  
+
+Your privacy is our top priority. All emotion analysis and processing happen directly in your browser. No video or emotion data is uploaded or shared.  
+
+---
+
+## License  
+
+This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.  

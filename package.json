@@ -1,21 +1,41 @@
 {
-  "name": "eye-tracking-app",
+  "name": "nextjs",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@tensorflow/tfjs": "^4.11.0",
+    "@hookform/resolvers": "^3.9.0",
+    "@next/swc-wasm-nodejs": "13.5.1",
+    "@radix-ui/react-alert-dialog": "^1.1.1",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@tensorflow-models/face-detection": "^1.0.2",
     "@tensorflow-models/face-landmarks-detection": "^1.0.5",
-    "@tensorflow-models/face-detection": "^1.0.1",
-    "@mediapipe/face_mesh": "^0.4.1633559619",
-    "face-api.js": "^0.22.2"
+    "@tensorflow/tfjs": "^4.17.0",
+    "@tensorflow/tfjs-backend-webgl": "^4.17.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "face-api.js": "^0.22.2",
+    "file-saver": "^2.0.5",
+    "jspdf": "^2.5.1",
+    "lucide-react": "^0.446.0",
+    "next": "13.5.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "recharts": "^2.13.0-alpha.5",
+    "tailwind-merge": "^2.5.2",
+    "tailwindcss": "3.3.3",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "vite": "^4.4.5"
+    "@types/file-saver": "^2.0.7",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "typescript": "5.7.2"
   }
 }
