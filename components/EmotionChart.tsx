@@ -9,7 +9,9 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Area,
+  ComposedChart
 } from 'recharts';
 import { useState, useEffect } from 'react';
 import type { EmotionData } from '@/lib/emotion-detection';
@@ -21,6 +23,32 @@ interface EmotionChartProps {
   currentEmotions: EmotionData | null;
 }
 
+const EMOTION_COLORS = {
+  happiness: '#22c55e',
+  sadness: '#60a5fa',
+  anger: '#ef4444',
+  surprise: '#a855f7',
+  fear: '#6b7280',
+  disgust: '#16a34a',
+  neutral: '#94a3b8'
+} as const;
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background/95 p-3 rounded-lg shadow-lg border border-border">
+        <p className="text-sm font-medium">{label}</p>
+        {payload.map((entry: any) => (
+          <p key={entry.name} style={{ color: entry.color }} className="text-sm">
+            {entry.name}: {(entry.value * 100).toFixed(1)}%
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export function EmotionChart({ currentEmotions }: EmotionChartProps) {
   const [emotionHistory, setEmotionHistory] = useState<Array<EmotionData & { time: string }>>([]);
 
@@ -30,7 +58,7 @@ export function EmotionChart({ currentEmotions }: EmotionChartProps) {
         const newHistory = [...prev, {
           ...currentEmotions,
           time: new Date().toLocaleTimeString()
-        }].slice(-20);
+        }].slice(-30);
         return newHistory;
       });
     }
@@ -69,45 +97,56 @@ export function EmotionChart({ currentEmotions }: EmotionChartProps) {
       </div>
       <div className="h-[400px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={emotionHistory}>
-            <CartesianGrid strokeDasharray="3 3" />
+          <ComposedChart data={emotionHistory}>
+            <defs>
+              {Object.entries(EMOTION_COLORS).map(([emotion, color]) => (
+                <linearGradient
+                  key={emotion}
+                  id={`${emotion}Gradient`}
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
+                  <stop offset="5%" stopColor={color} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={color} stopOpacity={0} />
+                </linearGradient>
+              ))}
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
             <XAxis 
               dataKey="time"
               tick={{ fontSize: 12 }}
               interval="preserveStartEnd"
+              stroke="#666"
             />
             <YAxis 
               domain={[0, 1]}
               tick={{ fontSize: 12 }}
-              label={{ value: 'Emotion Level', angle: -90, position: 'insideLeft' }}
+              label={{ 
+                value: 'Emotion Intensity', 
+                angle: -90, 
+                position: 'insideLeft',
+                style: { textAnchor: 'middle' }
+              }}
+              stroke="#666"
+              tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
             />
-            <Tooltip />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
-            <Line
-              type="monotone"
-              dataKey="happiness"
-              stroke="#22c55e"
-              strokeWidth={2}
-              dot={false}
-              name="Happiness"
-            />
-            <Line
-              type="monotone"
-              dataKey="sadness"
-              stroke="#60a5fa"
-              strokeWidth={2}
-              dot={false}
-              name="Sadness"
-            />
-            <Line
-              type="monotone"
-              dataKey="anger"
-              stroke="#ef4444"
-              strokeWidth={2}
-              dot={false}
-              name="Anger"
-            />
-          </LineChart>
+            {Object.entries(EMOTION_COLORS).map(([emotion, color]) => (
+              <Area
+                key={emotion}
+                type="monotone"
+                dataKey={emotion}
+                stroke={color}
+                fill={`url(#${emotion}Gradient)`}
+                strokeWidth={2}
+                name={emotion.charAt(0).toUpperCase() + emotion.slice(1)}
+                dot={false}
+              />
+            ))}
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </Card>

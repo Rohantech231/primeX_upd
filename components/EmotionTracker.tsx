@@ -5,6 +5,7 @@ import { VideoFeed } from './VideoFeed';
 import { CameraStatus } from './CameraStatus';
 import { EmotionOverlay } from './EmotionOverlay';
 import { EmotionChart } from './EmotionChart';
+import { FaceMesh } from './FaceMesh';
 import { useCamera } from '@/hooks/useCamera';
 import { useEmotionDetection } from '@/hooks/useEmotionDetection';
 import { initializeDetection } from '@/lib/emotion-detection';
@@ -31,6 +32,8 @@ export function EmotionTracker() {
     }
   }, [isPermissionGranted, isInitializing, error, initializeStream]);
 
+  const showFaceMesh = isPermissionGranted && !error && !isInitializing;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -48,6 +51,10 @@ export function EmotionTracker() {
         <VideoFeed
           ref={videoRef}
           onVideoMount={initializeStream}
+        />
+        <FaceMesh 
+          videoRef={videoRef}
+          isEnabled={showFaceMesh}
         />
         {currentEmotions && <EmotionOverlay emotions={currentEmotions} />}
       </div>

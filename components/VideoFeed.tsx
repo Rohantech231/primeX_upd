@@ -1,7 +1,6 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { FaceDetectionCanvas } from './FaceDetectionCanvas';
 
 interface VideoFeedProps {
   onVideoMount: (videoElement: HTMLVideoElement) => void;
@@ -23,9 +22,6 @@ export const VideoFeed = forwardRef<HTMLVideoElement, VideoFeedProps>(
             onVideoMount(video);
           }}
         />
-        {ref && 'current' in ref && ref.current && (
-          <FaceDetectionCanvas videoRef={ref as React.RefObject<HTMLVideoElement>} />
-        )}
       </div>
     );
   }
