@@ -21,74 +21,79 @@ export function FaceMesh({ videoRef, isEnabled }: FaceMeshProps) {
 
     const updateCanvasSize = () => {
       if (!videoRef.current || !canvasRef.current) return;
+      
+      // Get the actual dimensions of the video element
       const displaySize = {
-        width: videoRef.current.clientWidth,
-        height: videoRef.current.clientHeight
+        width: videoRef.current.offsetWidth,
+        height: videoRef.current.offsetHeight
       };
+
+      // Set canvas size to match video dimensions
       canvasRef.current.width = displaySize.width;
       canvasRef.current.height = displaySize.height;
+
+      // Match dimensions for face-api
       faceapi.matchDimensions(canvas, displaySize);
     };
-
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
 
     const drawMesh = async () => {
       if (!videoRef.current || !canvasRef.current || !context) return;
 
       try {
+        // Detect face with landmarks
         const detection = await faceapi
           .detectSingleFace(
             videoRef.current,
             new faceapi.TinyFaceDetectorOptions({
               inputSize: 224,
-              scoreThreshold: 0.3
+              scoreThreshold: 0.5
             })
           )
           .withFaceLandmarks();
 
         if (detection) {
+          // Get the dimensions of the video element
           const displaySize = {
-            width: videoRef.current.clientWidth,
-            height: videoRef.current.clientHeight
+            width: videoRef.current.offsetWidth,
+            height: videoRef.current.offsetHeight
           };
+
+          // Resize detection to match display size
           const resizedDetection = faceapi.resizeResults(detection, displaySize);
 
           // Clear previous drawing
           context.clearRect(0, 0, canvas.width, canvas.height);
 
-          // Draw face landmarks
-          context.strokeStyle = '#22c55e';
+          // Set drawing styles
+          context.strokeStyle = '#00ff00';
           context.lineWidth = 2;
-          
+          context.fillStyle = 'rgba(0, 255, 0, 0.1)';
+
           // Draw face outline
-          const jawLine = resizedDetection.landmarks.getJawOutline();
+          const jawOutline = resizedDetection.landmarks.getJawOutline();
           context.beginPath();
-          context.moveTo(jawLine[0].x, jawLine[0].y);
-          jawLine.forEach((point) => {
+          context.moveTo(jawOutline[0].x, jawOutline[0].y);
+          jawOutline.forEach((point) => {
             context.lineTo(point.x, point.y);
           });
+          context.closePath();
           context.stroke();
+          context.fill();
 
           // Draw eyes
           const leftEye = resizedDetection.landmarks.getLeftEye();
           const rightEye = resizedDetection.landmarks.getRightEye();
-          
-          context.beginPath();
-          context.moveTo(leftEye[0].x, leftEye[0].y);
-          leftEye.forEach((point) => {
-            context.lineTo(point.x, point.y);
-          });
-          context.closePath();
-          context.stroke();
 
-          context.beginPath();
-          context.moveTo(rightEye[0].x, rightEye[0].y);
-          rightEye.forEach((point) => {
-            context.lineTo(point.x, point.y);
+          [leftEye, rightEye].forEach(eye => {
+            context.beginPath();
+            context.moveTo(eye[0].x, eye[0].y);
+            eye.forEach((point) => {
+              context.lineTo(point.x, point.y);
+            });
+            context.closePath();
+            context.stroke();
+            context.fill();
           });
-          context.closePath();
-          context.stroke();
 
           // Draw nose
           const nose = resizedDetection.landmarks.getNose();
@@ -108,6 +113,7 @@ export function FaceMesh({ videoRef, isEnabled }: FaceMeshProps) {
           });
           context.closePath();
           context.stroke();
+          context.fill();
         }
       } catch (error) {
         console.error('Error drawing face mesh:', error);
@@ -116,6 +122,10 @@ export function FaceMesh({ videoRef, isEnabled }: FaceMeshProps) {
       // Request next frame
       animationRef.current = requestAnimationFrame(drawMesh);
     };
+
+    // Initial setup
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
 
     // Start animation loop
     drawMesh();

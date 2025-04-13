@@ -1,55 +1,50 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState, useRef, RefObject } from 'react';
 import { detectEmotions, type EmotionData } from '@/lib/emotion-detection';
 
-export function useEmotionDetection(videoRef: React.RefObject<HTMLVideoElement>) {
-  const [currentEmotions, setCurrentEmotions] = useState<EmotionData | null>(null);
-  const [isDetecting, setIsDetecting] = useState(false);
-  const detectionInterval = useRef<NodeJS.Timeout>();
+export function useEmotionDetection(
+  videoRef: RefObject<HTMLVideoElement>,
+  isEnabled: boolean
+) {
+  const [emotions, setEmotions] = useState<EmotionData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const frameRef = useRef<number>();
 
   useEffect(() => {
-    const startDetection = async () => {
-      if (!videoRef.current || videoRef.current.readyState < 2) return;
-      
-      try {
-        setIsDetecting(true);
-        const emotions = await detectEmotions(videoRef.current);
-        if (emotions) {
-          setCurrentEmotions(emotions);
-        }
-      } catch (error) {
-        console.error('Emotion detection error:', error);
-      } finally {
-        setIsDetecting(false);
-      }
-    };
-
-    // Start detection loop when video is ready
-    const startDetectionLoop = () => {
-      if (detectionInterval.current) {
-        clearInterval(detectionInterval.current);
-      }
-      detectionInterval.current = setInterval(startDetection, 1000); // Reduced frequency for better performance
-    };
-
-    if (videoRef.current && videoRef.current.readyState >= 2) {
-      startDetectionLoop();
+    if (!isEnabled) {
+      setEmotions(null);
+      setError(null);
+      return;
     }
 
-    const videoElement = videoRef.current;
-    videoElement?.addEventListener('loadeddata', startDetectionLoop);
+    const detectFrame = async () => {
+      try {
+        if (!videoRef.current) {
+          setError('Video feed not available');
+          return;
+        }
+
+        const detectedEmotions = await detectEmotions(videoRef.current);
+        if (detectedEmotions) {
+          setEmotions(detectedEmotions);
+          setError(null);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to detect emotions');
+      }
+
+      frameRef.current = requestAnimationFrame(detectFrame);
+    };
+
+    detectFrame();
 
     return () => {
-      if (detectionInterval.current) {
-        clearInterval(detectionInterval.current);
+      if (frameRef.current) {
+        cancelAnimationFrame(frameRef.current);
       }
-      videoElement?.removeEventListener('loadeddata', startDetectionLoop);
     };
-  }, [videoRef]);
+  }, [videoRef, isEnabled]);
 
-  return {
-    currentEmotions,
-    isDetecting
-  };
+  return { emotions, error };
 }

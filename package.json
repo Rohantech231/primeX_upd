@@ -11,8 +11,10 @@
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "13.5.1",
-    "@radix-ui/react-alert-dialog": "^1.1.1",
+    "@nivo/line": "^0.88.0",
+    "@radix-ui/react-alert-dialog": "^1.1.7",
     "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-select": "^2.1.7",
     "@tensorflow-models/face-detection": "^1.0.2",
     "@tensorflow-models/face-landmarks-detection": "^1.0.5",
     "@tensorflow/tfjs": "^4.17.0",

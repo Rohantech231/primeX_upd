@@ -184,6 +184,6 @@ export function EmotionVisualization3D({ emotions, width, height }: EmotionVisua
           </radialGradient>
         </defs>
       </svg>
-    </div>
+     </div>
   );
 }
