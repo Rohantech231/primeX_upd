@@ -11,130 +11,103 @@ interface FaceMeshProps {
 export function FaceMesh({ videoRef, isEnabled }: FaceMeshProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
+  const lastDrawTime = useRef<number>(0);
+  const FPS_CAP = 30; // Cap at 30 FPS for better performance
+  const FRAME_TIME = 1000 / FPS_CAP;
 
   useEffect(() => {
     if (!isEnabled || !videoRef.current || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext('2d', {
+      alpha: false,
+      desynchronized: true // Use desynchronized context for lower latency
+    });
     if (!context) return;
+
+    // Optimize canvas
+    context.imageSmoothingEnabled = false;
 
     const updateCanvasSize = () => {
       if (!videoRef.current || !canvasRef.current) return;
       
-      // Get the actual dimensions of the video element
       const displaySize = {
         width: videoRef.current.offsetWidth,
         height: videoRef.current.offsetHeight
       };
-
-      // Set canvas size to match video dimensions
-      canvasRef.current.width = displaySize.width;
-      canvasRef.current.height = displaySize.height;
-
-      // Match dimensions for face-api
-      faceapi.matchDimensions(canvas, displaySize);
+      
+      // Only update if size actually changed
+      if (canvas.width !== displaySize.width || canvas.height !== displaySize.height) {
+        canvas.width = displaySize.width;
+        canvas.height = displaySize.height;
+      }
     };
 
-    const drawMesh = async () => {
+    const drawMesh = async (timestamp: number) => {
       if (!videoRef.current || !canvasRef.current || !context) return;
 
+      // Implement FPS cap
+      const elapsed = timestamp - lastDrawTime.current;
+      if (elapsed < FRAME_TIME) {
+        animationRef.current = requestAnimationFrame(drawMesh);
+        return;
+      }
+      lastDrawTime.current = timestamp;
+
       try {
-        // Detect face with landmarks
         const detection = await faceapi
           .detectSingleFace(
             videoRef.current,
             new faceapi.TinyFaceDetectorOptions({
-              inputSize: 224,
+              inputSize: 160,
               scoreThreshold: 0.5
             })
           )
-          .withFaceLandmarks();
+          .withFaceLandmarks(true);
 
         if (detection) {
-          // Get the dimensions of the video element
           const displaySize = {
             width: videoRef.current.offsetWidth,
             height: videoRef.current.offsetHeight
           };
 
-          // Resize detection to match display size
           const resizedDetection = faceapi.resizeResults(detection, displaySize);
+          
+          // Clear only the necessary area
+          const box = resizedDetection.detection.box;
+          context.clearRect(box.x - 5, box.y - 5, box.width + 10, box.height + 10);
 
-          // Clear previous drawing
-          context.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Set drawing styles
-          context.strokeStyle = '#00ff00';
-          context.lineWidth = 2;
-          context.fillStyle = 'rgba(0, 255, 0, 0.1)';
-
-          // Draw face outline
-          const jawOutline = resizedDetection.landmarks.getJawOutline();
+          // Batch drawing operations
           context.beginPath();
-          context.moveTo(jawOutline[0].x, jawOutline[0].y);
-          jawOutline.forEach((point) => {
-            context.lineTo(point.x, point.y);
-          });
-          context.closePath();
-          context.stroke();
-          context.fill();
+          context.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+          context.lineWidth = 1;
 
-          // Draw eyes
-          const leftEye = resizedDetection.landmarks.getLeftEye();
-          const rightEye = resizedDetection.landmarks.getRightEye();
-
-          [leftEye, rightEye].forEach(eye => {
-            context.beginPath();
-            context.moveTo(eye[0].x, eye[0].y);
-            eye.forEach((point) => {
-              context.lineTo(point.x, point.y);
-            });
-            context.closePath();
-            context.stroke();
-            context.fill();
-          });
-
-          // Draw nose
-          const nose = resizedDetection.landmarks.getNose();
-          context.beginPath();
-          context.moveTo(nose[0].x, nose[0].y);
-          nose.forEach((point) => {
+          // Draw landmarks in a single path
+          const landmarks = resizedDetection.landmarks.positions;
+          context.moveTo(landmarks[0].x, landmarks[0].y);
+          landmarks.forEach(point => {
             context.lineTo(point.x, point.y);
           });
           context.stroke();
-
-          // Draw mouth
-          const mouth = resizedDetection.landmarks.getMouth();
-          context.beginPath();
-          context.moveTo(mouth[0].x, mouth[0].y);
-          mouth.forEach((point) => {
-            context.lineTo(point.x, point.y);
-          });
-          context.closePath();
-          context.stroke();
-          context.fill();
         }
       } catch (error) {
         console.error('Error drawing face mesh:', error);
       }
 
-      // Request next frame
       animationRef.current = requestAnimationFrame(drawMesh);
     };
 
-    // Initial setup
     updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
+    const resizeObserver = new ResizeObserver(updateCanvasSize);
+    resizeObserver.observe(videoRef.current);
 
-    // Start animation loop
-    drawMesh();
+    drawMesh(performance.now());
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
-      window.removeEventListener('resize', updateCanvasSize);
+      resizeObserver.disconnect();
     };
   }, [videoRef, isEnabled]);
 
@@ -144,7 +117,10 @@ export function FaceMesh({ videoRef, isEnabled }: FaceMeshProps) {
     <canvas
       ref={canvasRef}
       className="absolute top-0 left-0 w-full h-full pointer-events-none"
-      style={{ zIndex: 10 }}
+      style={{ 
+        zIndex: 10,
+        cursor: 'none' // Hide default cursor
+      }}
     />
   );
 }

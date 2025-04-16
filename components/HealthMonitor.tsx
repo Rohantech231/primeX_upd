@@ -56,20 +56,20 @@ export function HealthMonitor({ metrics }: HealthMonitorProps) {
   };
 
   const getStressStatus = (level: number) => {
-    if (level > 0.7) return 'alert';
-    if (level > 0.5) return 'warning';
-    return 'normal';
-  };
-
-  const getFatigueStatus = (level: number) => {
     if (level > 0.6) return 'alert';
     if (level > 0.4) return 'warning';
     return 'normal';
   };
 
+  const getFatigueStatus = (score: number) => {
+    if (score > 0.7) return 'alert';
+    if (score > 0.5) return 'warning';
+    return 'normal';
+  };
+
   const getBlinkStatus = (rate: number) => {
-    if (rate < 12) return 'alert';
-    if (rate < 15) return 'warning';
+    if (rate < 10) return 'alert';
+    if (rate < 13) return 'warning';
     return 'normal';
   };
 
@@ -115,7 +115,7 @@ export function HealthMonitor({ metrics }: HealthMonitorProps) {
               <h3 className="font-semibold">Health Insights</h3>
             </div>
             <div className="space-y-3">
-              {metrics.stressLevel > 0.7 && (
+              {metrics.stressLevel > 0.6 && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>High Stress Detected</AlertTitle>
@@ -124,7 +124,7 @@ export function HealthMonitor({ metrics }: HealthMonitorProps) {
                   </AlertDescription>
                 </Alert>
               )}
-              {metrics.fatigueScore > 0.6 && (
+              {metrics.fatigueScore > 0.7 && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Mental Fatigue Warning</AlertTitle>
@@ -133,7 +133,7 @@ export function HealthMonitor({ metrics }: HealthMonitorProps) {
                   </AlertDescription>
                 </Alert>
               )}
-              {metrics.blinkRate < 12 && (
+              {metrics.blinkRate < 10 && (
                 <Alert>
                   <Eye className="h-4 w-4" />
                   <AlertTitle>Digital Eye Strain Risk</AlertTitle>

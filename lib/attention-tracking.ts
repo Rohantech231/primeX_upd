@@ -22,6 +22,16 @@ let blinkCount = 0;
 let lastBlinkCheck = Date.now();
 const BLINK_INTERVAL = 60000; // 1 minute
 
+const BLINK_THRESHOLD = 0.3;
+const MIN_BLINK_DURATION = 100; // ms
+let lastBlinkTime = Date.now();
+let isCurrentlyBlinking = false;
+
+// Performance optimization constants
+const FRAME_SKIP = 2; // Process every nth frame
+let frameCount = 0;
+const DETECTION_SIZE = 160; // Smaller input size for faster processing
+
 export async function calculateAttentionMetrics(
   video: HTMLVideoElement
 ): Promise<AttentionMetrics> {
@@ -72,15 +82,30 @@ export async function calculateWellnessMetrics(
   video: HTMLVideoElement
 ): Promise<WellnessMetrics> {
   try {
-    console.log('Detecting face for wellness metrics...');
+    frameCount = (frameCount + 1) % FRAME_SKIP;
+    if (frameCount !== 0) {
+      return lastMetrics || {
+        stressLevel: 0,
+        fatigueScore: 0,
+        blinkRate: 0,
+        timestamp: Date.now()
+      };
+    }
+
     const detection = await faceapi
-      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks()
+      .detectSingleFace(
+        video, 
+        new faceapi.TinyFaceDetectorOptions({
+          inputSize: DETECTION_SIZE,
+          scoreThreshold: 0.5
+        })
+      )
+      .withFaceLandmarks(true) // Use tiny model
       .withFaceExpressions();
 
     if (!detection) {
       console.log('No face detected for wellness metrics');
-      return {
+      return lastMetrics || {
         stressLevel: 0,
         fatigueScore: 0,
         blinkRate: 0,
@@ -105,6 +130,12 @@ export async function calculateWellnessMetrics(
     }
     lastEyeState = currentEyeState;
 
+    const isBlink = detectBlink(eyeAspectRatio);
+    if (isBlink) {
+      blinkCount++;
+      console.log('Blink detected, count:', blinkCount);
+    }
+
     // Calculate blink rate (blinks per minute)
     const currentTime = Date.now();
     let blinkRate = 0;
@@ -123,17 +154,27 @@ export async function calculateWellnessMetrics(
     const fatigueScore = calculateFatigueScore(eyeAspectRatio, blinkRate);
     console.log('Wellness metrics calculated:', { stressLevel, fatigueScore, blinkRate });
 
-    return {
+    lastMetrics = {
       stressLevel,
       fatigueScore,
       blinkRate,
       timestamp: currentTime
     };
+
+    return lastMetrics;
   } catch (error) {
     console.error('Error calculating wellness metrics:', error);
-    throw error;
+    return lastMetrics || {
+      stressLevel: 0,
+      fatigueScore: 0,
+      blinkRate: 0,
+      timestamp: Date.now()
+    };
   }
 }
+
+// Cache last metrics to reduce jitter
+let lastMetrics: WellnessMetrics | null = null;
 
 function calculateEyeAspectRatio(leftEye: faceapi.Point[], rightEye: faceapi.Point[]): number {
   const leftRatio = calculateSingleEyeAspectRatio(leftEye);
@@ -170,14 +211,37 @@ function calculateFaceOrientation(jaw: faceapi.Point[]): number {
 }
 
 function calculateStressLevel(expressions: any): number {
-  // Weight different expressions that indicate stress
-  return Math.min(
-    expressions.angry * 0.4 +
-    expressions.fearful * 0.3 +
+  // Enhanced weight distribution for better sensitivity
+  const stressScore = Math.min(
+    expressions.angry * 0.35 +
+    expressions.fearful * 0.25 +
     expressions.disgusted * 0.2 +
-    expressions.sad * 0.1,
+    expressions.sad * 0.15 +
+    (1 - (expressions.happy || 0)) * 0.05, // Factor in lack of happiness
     1
   );
+
+  // Apply exponential scaling for more pronounced changes
+  return Math.pow(stressScore, 1.5);
+}
+
+function detectBlink(eyeAspectRatio: number): boolean {
+  const currentTime = Date.now();
+  
+  if (eyeAspectRatio < BLINK_THRESHOLD && !isCurrentlyBlinking) {
+    isCurrentlyBlinking = true;
+    lastBlinkTime = currentTime;
+    return false;
+  }
+  
+  if (eyeAspectRatio >= BLINK_THRESHOLD && isCurrentlyBlinking) {
+    isCurrentlyBlinking = false;
+    if (currentTime - lastBlinkTime >= MIN_BLINK_DURATION) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 function calculateFatigueScore(eyeAspectRatio: number, blinkRate: number): number {

@@ -5,11 +5,8 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Emotion Tracker',
-  description: 'Real-time emotion tracking application',
-  icons: {
-    icon: '/favicon.ico'
-  }
+  title: 'PrimeX - Emotion & Wellness Tracking',
+  description: 'Real-time emotion and wellness tracking for better mental health',
 };
 
 export default function RootLayout({
